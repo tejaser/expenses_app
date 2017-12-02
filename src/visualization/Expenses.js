@@ -5,12 +5,13 @@ import _ from 'lodash';
 
 // console.log(expenseData);
 
-var height = 600;
-var margin = { left: 20, top: 20, right: 20, bottom: 20 };
+var height = 500;
+var margin = { left: 40, top: 20, right: 40, bottom: 20 };
 var radius = 7;
 
 // d3 functions
-var xScale = d3.scaleBand().domain([0, 1, 2, 3, 4, 5, 6]);
+var daysOfWeek = [[0, 'Sun'], [1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat']];
+var xScale = d3.scaleBand().domain(_.map(daysOfWeek, 0));
 var yScale = d3.scaleLinear().range([height - margin.bottom, margin.top]);
 var colorScale = chroma.scale(['#53cf8d', '#f7d283', '#e85151']);
 var amountScale = d3.scaleLog();
@@ -26,6 +27,7 @@ var simulation = d3
 class Expenses extends Component {
     constructor(props) {
         super(props);
+        this.state = { selectedWeek: null };
         this.forceTick = this.forceTick.bind(this);
     }
     componentWillMount() {
@@ -40,6 +42,8 @@ class Expenses extends Component {
         // component itself.
         // console.log(this.refs.container, this.container);  // just to check what those selection are providing us
         this.calculateData();
+        this.renderDays();
+        this.renderWeeks();
         this.renderCircles();
         simulation
             .nodes(this.props.expenses)
@@ -54,14 +58,50 @@ class Expenses extends Component {
         var weeksExtent = d3.extent(this.props.expenses, d => d3.timeWeek.floor(d.date));
         yScale.domain(weeksExtent);
 
+        var selectedWeek = weeksExtent[1];
+        var selectedWeekRadius = (this.props.width - margin.left - margin.right) / 2;
+        var perAngle = Math.PI / 6;
+
+        // rectangle for each weeksExtent
+        var weeks = d3.timeWeek.range(weeksExtent[0], d3.timeWeek.offset(weeksExtent[1], 1));
+        this.weeks = _.map(weeks, week => {
+            return {
+                week,
+                x: margin.left,
+                y: yScale(week) + height
+            };
+        });
+        console.log(this.weeks);
+        // circles for the back of each day in semi-circle
+        this.days = _.map(daysOfWeek, date => {
+            var [dayOfWeek, name] = date;
+            var angle = Math.PI - perAngle * dayOfWeek;
+            var x = selectedWeekRadius * Math.cos(angle) + this.props.width / 2;
+            var y = selectedWeekRadius * Math.sin(angle) + margin.top;
+            return {
+                name,
+                x,
+                y
+            };
+        });
+        // console.log(this.days);
+
         this.expenses = _.chain(this.props.expenses)
             .groupBy(d => d3.timeWeek.floor(d.date))
             .map((expenses, week) => {
                 week = new Date(week);
                 return _.map(expenses, exp => {
+                    var dayOfWeek = exp.date.getDay();
+                    var focusX = xScale(dayOfWeek);
+                    var focusY = yScale(week) + height;
+                    if (week.getTime() === selectedWeek.getTime()) {
+                        var angle = Math.PI - perAngle * dayOfWeek;
+                        focusX = selectedWeekRadius * Math.cos(angle) + this.props.width / 2;
+                        focusY = selectedWeekRadius * Math.sin(angle) + margin.top;
+                    }
                     return Object.assign(exp, {
-                        focusX: xScale(exp.date.getDay()),
-                        focusY: yScale(week)
+                        focusX,
+                        focusY
                     });
                 });
             })
@@ -74,9 +114,60 @@ class Expenses extends Component {
         amountScale.domain(amountExtent);
     }
 
+    renderDays() {
+        var days = this.container
+            .selectAll('.day')
+            .data(this.days, d => d.name)
+            .enter()
+            .append('g')
+            .classed('day', true)
+            .attr('transform', d => 'translate(' + [d.x, d.y] + ')');
+
+        var daysRadius = 50;
+        var fontSize = 12;
+        days
+            .append('circle')
+            .attr('r', daysRadius)
+            .attr('fill', '#cdf')
+            .attr('opacity', 0.25);
+        days
+            .append('text')
+            .attr('y', daysRadius + fontSize)
+            .attr('text-anchor', 'middle')
+            .attr('dy', '.35em')
+            .attr('fill', '#999')
+            .style('font-weight', 600)
+            .text(d => d.name);
+    }
+    renderWeeks() {
+        // console.log('hello');
+        var weeks = this.container
+            .selectAll('.week')
+            .data(this.weeks, d => d.name)
+            .enter()
+            .append('g')
+            .classed('week', true)
+            .attr('transform', d => 'translate(' + [d.x, d.y] + ')');
+
+        var rectHeight = 10;
+        weeks
+            .append('rect')
+            .attr('width', this.props.width - margin.left - margin.right)
+            .attr('y', -rectHeight / 2)
+            .attr('height', rectHeight)
+            .attr('fill', '#ccc')
+            .attr('opacity', 0.25);
+
+        var weekFormat = d3.timeFormat('%m/%d');
+        weeks
+            .append('text')
+            .attr('text-anchor', 'end')
+            .attr('dy', '.35em')
+            .text(d => weekFormat(d.week));
+    }
     renderCircles() {
         // now drawing circles
-        this.circles = this.container.selectAll('circle').data(this.expenses, d => d.name);
+        this.circles = this.container.selectAll('.expense').data(this.expenses, d => d.name);
 
         // complete enter, update and exit pattern.
 
@@ -87,6 +178,7 @@ class Expenses extends Component {
         this.circles = this.circles
             .enter()
             .append('circle')
+            .classed('expense', true)
             .attr('r', radius)
             .attr('fill-opacity', 0.25)
             .attr('stroke-width', 3)
@@ -100,7 +192,7 @@ class Expenses extends Component {
     }
 
     render() {
-        return <svg ref="container" width={this.props.width} height={height} />;
+        return <svg ref="container" width={this.props.width} height={2 * height} />;
     }
 }
 
