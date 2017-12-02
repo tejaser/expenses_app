@@ -5,12 +5,13 @@ import _ from 'lodash';
 
 // console.log(expenseData);
 
-var height = 900;
+var height = 600;
 var margin = { left: 20, top: 20, right: 20, bottom: 20 };
 var radius = 7;
 
 // d3 functions
 var xScale = d3.scaleBand().domain([0, 1, 2, 3, 4, 5, 6]);
+var yScale = d3.scaleLinear().range([height - margin.bottom, margin.top]);
 var colorScale = chroma.scale(['#53cf8d', '#f7d283', '#e85151']);
 var amountScale = d3.scaleLog();
 
@@ -50,17 +51,17 @@ class Expenses extends Component {
         // this.renderCircles();
     }
     calculateData() {
-        var row = -1;
+        var weeksExtent = d3.extent(this.props.expenses, d => d3.timeWeek.floor(d.date));
+        yScale.domain(weeksExtent);
 
         this.expenses = _.chain(this.props.expenses)
             .groupBy(d => d3.timeWeek.floor(d.date))
-            .sortBy((expenses, week) => new Date(week))
-            .map(expenses => {
-                row += 1;
+            .map((expenses, week) => {
+                week = new Date(week);
                 return _.map(expenses, exp => {
                     return Object.assign(exp, {
                         focusX: xScale(exp.date.getDay()),
-                        focusY: row * 120
+                        focusY: yScale(week)
                     });
                 });
             })
