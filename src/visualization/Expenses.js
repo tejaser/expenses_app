@@ -27,11 +27,11 @@ class Expenses extends Component {
     constructor(props) {
         super(props);
         this.forceTick = this.forceTick.bind(this);
-        simulation.on('tick', this.forceTick);
     }
     componentWillMount() {
         xScale.range([margin.left, this.props.width - margin.right]);
-        simulation.force('center', d3.forceCenter(this.props.width / 2, height / 2));
+        // simulation.force('center', d3.forceCenter(this.props.width / 2,));
+        simulation.on('tick', this.forceTick);
     }
 
     componentDidMount() {
