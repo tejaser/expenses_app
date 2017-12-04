@@ -198,7 +198,7 @@ class Expenses extends Component {
   }
 
   render() {
-    return <svg ref="container" width={this.props.width} height={2 * height} />;
+    return <g ref="container" />;
   }
 }
 

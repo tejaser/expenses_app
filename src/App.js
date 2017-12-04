@@ -3,16 +3,19 @@ import './App.css';
 import _ from 'lodash';
 import * as d3 from 'd3';
 import Expenses from './visualization/Expenses';
+import Categories from './visualization/Categories';
 import expenseData from './data/expenses.json';
 // console.log(expenseData);
 
 var width = 900;
+var height = 1800;
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       expenses: [],
+      categories: [{ name: 'Groceries', expenses: [], total: 0 }, { name: 'Restaurants', expenses: [], total: 0 }],
       selectedWeek: null
     };
     this.prevWeek = this.prevWeek.bind(this);
@@ -60,7 +63,10 @@ class App extends Component {
           Week of {selectedWeek}
           <span onClick={this.nextWeek}> &rarr; </span>
         </h2>
-        <Expenses {...props} {...this.state} />
+        <svg width={width} height={height}>
+          <Categories {...props} {...this.state} />
+          <Expenses {...props} {...this.state} />
+        </svg>
       </div>
     );
   }
