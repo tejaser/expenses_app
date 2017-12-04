@@ -1,21 +1,24 @@
-import React, { Component } from 'react';
-import './App.css';
-import _ from 'lodash';
-import * as d3 from 'd3';
-import Expenses from './visualization/Expenses';
-import Categories from './visualization/Categories';
-import expenseData from './data/expenses.json';
+import React, { Component } from "react";
+import "./App.css";
+import _ from "lodash";
+import * as d3 from "d3";
+import Expenses from "./visualization/Expenses";
+import Categories from "./visualization/Categories";
+import expenseData from "./data/expenses.json";
 // console.log(expenseData);
 
-var width = 900;
-var height = 1800;
+var width = 600;
+var height = 1200;
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       expenses: [],
-      categories: [{ name: 'Groceries', expenses: [], total: 0 }, { name: 'Restaurants', expenses: [], total: 0 }],
+      categories: [
+        { name: "Groceries", expenses: [], total: 0 },
+        { name: "Restaurants", expenses: [], total: 0 }
+      ],
       selectedWeek: null
     };
     this.prevWeek = this.prevWeek.bind(this);
@@ -28,13 +31,13 @@ class App extends Component {
         return {
           amount: -d.Amount,
           name: d.Description,
-          date: new Date(d['Trans Date'])
+          date: new Date(d["Trans Date"])
         };
       })
       .value();
     // default selected week will be the most recent week
     var selectedWeek = d3.max(expenses, exp => d3.timeWeek.floor(exp.date));
-    console.log(selectedWeek);
+    // console.log(selectedWeek);
     this.setState({ expenses, selectedWeek });
   }
   prevWeek() {
@@ -55,13 +58,19 @@ class App extends Component {
     var props = {
       width
     };
-    var selectedWeek = d3.timeFormat('%B %d, %Y')(this.state.selectedWeek);
+    var selectedWeek = d3.timeFormat("%B %d, %Y")(this.state.selectedWeek);
     return (
       <div className="App">
         <h2>
-          <span onClick={this.prevWeek}> &larr; </span>
+          <span className="weekChange" onClick={this.prevWeek}>
+            {" "}
+            &larr;{" "}
+          </span>
           Week of {selectedWeek}
-          <span onClick={this.nextWeek}> &rarr; </span>
+          <span className="weekChange" onClick={this.nextWeek}>
+            {" "}
+            &rarr;{" "}
+          </span>
         </h2>
         <svg width={width} height={height}>
           <Categories {...props} {...this.state} />
