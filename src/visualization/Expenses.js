@@ -42,6 +42,8 @@ class Expenses extends Component {
     this.state = {};
     this.forceTick = this.forceTick.bind(this);
     this.dragExpenses = this.dragExpenses.bind(this);
+    this.dragStart = this.dragStart.bind(this);
+    this.dragEnd = this.dragEnd.bind(this);
   }
   componentWillMount() {
     xScale.range([margin.left, this.props.width - margin.right]);
@@ -76,14 +78,20 @@ class Expenses extends Component {
       .restart();
   }
   calculateData() {
-    var weeksExtent = d3.extent(this.props.expenses, d => d3.timeWeek.floor(d.date));
+    var weeksExtent = d3.extent(this.props.expenses, d =>
+      d3.timeWeek.floor(d.date)
+    );
     yScale.domain(weeksExtent);
 
-    var selectedWeekRadius = (this.props.width - margin.left - margin.right) / 2;
+    var selectedWeekRadius =
+      (this.props.width - margin.left - margin.right) / 2;
     var perAngle = Math.PI / 6;
 
     // rectangle for each weeksExtent
-    var weeks = d3.timeWeek.range(weeksExtent[0], d3.timeWeek.offset(weeksExtent[1], 1));
+    var weeks = d3.timeWeek.range(
+      weeksExtent[0],
+      d3.timeWeek.offset(weeksExtent[1], 1)
+    );
     this.weeks = _.map(weeks, week => {
       return {
         week,
@@ -116,7 +124,8 @@ class Expenses extends Component {
           var focusY = yScale(week) + height;
           if (week.getTime() === this.props.selectedWeek.getTime()) {
             var angle = Math.PI - perAngle * dayOfWeek;
-            focusX = selectedWeekRadius * Math.cos(angle) + this.props.width / 2;
+            focusX =
+              selectedWeekRadius * Math.cos(angle) + this.props.width / 2;
             focusY = selectedWeekRadius * Math.sin(angle) + margin.top;
           }
           return Object.assign(exp, {
@@ -188,7 +197,9 @@ class Expenses extends Component {
   }
   renderCircles() {
     // now drawing circles
-    this.circles = this.container.selectAll(".expense").data(this.expenses, d => d.name);
+    this.circles = this.container
+      .selectAll(".expense")
+      .data(this.expenses, d => d.name);
 
     // complete enter, update and exit pattern.
 
@@ -222,15 +233,41 @@ class Expenses extends Component {
     // var [x, y] = d3.mouse(this.refs.container);
     // console.log(x, y, d3.event.x, d3.event.y);
     // console.log(d3.event.x, d3.event.y);
+    this.dragged = null;
 
     d3.event.subject.fx = d3.event.x;
     d3.event.subject.fy = d3.event.y;
+
+    var expense = d3.event.subject;
+    var expenseX = d3.event.x;
+    var expenseY = d3.event.y;
+
+    _.each(this.props.categories, category => {
+      var { x, y, radius } = category;
+      if (
+        x - radius / 2 < expenseX &&
+        expenseX < x + radius / 2 &&
+        y - radius / 2 < expenseY &&
+        expenseY < y + radius / 2
+      ) {
+        this.props.linkToCategory(expense, category);
+        this.dragged = { expense, category };
+      }
+    });
   }
 
   dragEnd() {
-    simulation.alphaTarget(0);
+    if (!d3.event.active) simulation.alphaTarget(0);
     d3.event.subject.fx = null;
     d3.event.subject.fy = null;
+
+    //clean up the dragged variable
+    if (this.dragged) {
+      var { expense, category } = this.dragged;
+      this.props.linkToCategory(expense, category);
+    }
+
+    this.dragged = null;
   }
 
   render() {

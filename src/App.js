@@ -23,12 +23,14 @@ class App extends Component {
     };
     this.prevWeek = this.prevWeek.bind(this);
     this.nextWeek = this.nextWeek.bind(this);
+    this.linkToCategory = this.linkToCategory.bind(this);
   }
   componentWillMount() {
     var expenses = _.chain(expenseData)
       .filter(d => d.Amount < 0)
-      .map(d => {
+      .map((d, i) => {
         return {
+          id: i,
           amount: -d.Amount,
           name: d.Description,
           date: new Date(d["Trans Date"])
@@ -54,9 +56,19 @@ class App extends Component {
     this.setState({ selectedWeek });
   }
 
+  linkToCategory(expense, category) {
+    category.expenses.push(expense);
+    category.total = _.sumBy(category.expenses, "amount");
+
+    this.forceUpdate();
+
+    // console.log(category);
+  }
+
   render() {
     var props = {
-      width
+      width,
+      linkToCategory: this.linkToCategory
     };
     var selectedWeek = d3.timeFormat("%B %d, %Y")(this.state.selectedWeek);
     return (

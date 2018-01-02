@@ -4,14 +4,15 @@ import * as d3 from "d3";
 // console.log(expenseData);
 
 var radiusScale = d3.scaleLinear().range([15, 50]);
-var height = 450;
-// var margin = { left: 40, top: 20, right: 40, bottom: 20 };
+
+var height = 600;
+var margin = { left: 40, top: 20, right: 40, bottom: 20 };
 
 var simulation = d3
   .forceSimulation()
   // .force('charge', d3.forceManyBody
-  .velocityDecay(0.25)
-  .alphaDecay(0.0025)
+  .velocityDecay(0.3)
+  .alphaDecay(0.001)
   .force("collide", d3.forceCollide().radius(d => d.radius + 10))
   .force("x", d3.forceX(d => d.focusX))
   .force("y", d3.forceY(d => d.focusY))
@@ -37,13 +38,25 @@ class Categories extends Component {
   }
   componentDidUpdate() {
     // component
+    this.calculateData();
+    this.renderCircles();
+    simulation
+      .nodes(this.props.categories)
+      .alpha(0.9)
+      .restart();
   }
   calculateData() {
     // all the calculation go here
 
     //first lets create domain for radius based on the total amount of expenses
-    // var radiusExtent = d3.extent(this.props.categories, category => category.total);
+    var radiusExtent = d3.extent(
+      this.props.categories,
+      category => category.total
+    );
     // console.log("radius extent:", radiusExtent);
+
+    radiusScale.domain(radiusExtent);
+
     this.categories = _.map(this.props.categories, category => {
       return Object.assign(category, {
         radius: radiusScale(category.total),
@@ -54,7 +67,7 @@ class Categories extends Component {
   }
   renderCircles() {
     // d3 rendering code goes here
-    this.circles = this.container.selectAll("circles").data(this.categories);
+    this.circles = this.container.selectAll("g").data(this.categories);
 
     // exit
     this.circles.exit().remove();
