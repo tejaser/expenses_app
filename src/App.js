@@ -19,6 +19,7 @@ class App extends Component {
         { name: "Groceries", expenses: [], total: 0 },
         { name: "Restaurants", expenses: [], total: 0 }
       ],
+      links: [],
       selectedWeek: null
     };
     this.prevWeek = this.prevWeek.bind(this);
@@ -60,7 +61,17 @@ class App extends Component {
     category.expenses.push(expense);
     category.total = _.sumBy(category.expenses, "amount");
 
-    this.forceUpdate();
+    // create a link between expense and the category
+
+    var links = this.state.links;
+
+    links.push({
+      source: expense,
+      target: category
+    });
+
+    this.setState({ links });
+    // this.forceUpdate();
 
     // console.log(category);
   }

@@ -29,6 +29,7 @@ class Categories extends Component {
   componentDidMount() {
     this.container = d3.select(this.refs.container);
     this.calculateData();
+    this.renderLinks();
     this.renderCircles();
 
     simulation
@@ -39,6 +40,7 @@ class Categories extends Component {
   componentDidUpdate() {
     // component
     this.calculateData();
+    this.renderLinks();
     this.renderCircles();
     simulation
       .nodes(this.props.categories)
@@ -64,6 +66,17 @@ class Categories extends Component {
         focusY: height / 4
       });
     });
+  }
+
+  renderLinks() {
+    this.lines = this.container.selectAll("line").data(this.props.links);
+
+    this.lines.exit().remove();
+    this.lines = this.lines
+      .enter()
+      .insert("line", "g")
+      .attr("stroke", "#666")
+      .merge(this.lines);
   }
   renderCircles() {
     // d3 rendering code goes here
@@ -91,6 +104,11 @@ class Categories extends Component {
   }
   forceTick() {
     this.circles.attr("transform", d => "translate(" + [d.x, d.y] + ")");
+    this.lines
+      .attr("x1", d => d.source.x)
+      .attr("x2", d => d.target.x)
+      .attr("y1", d => d.source.y)
+      .attr("y2", d => d.target.y);
   }
 
   render() {
