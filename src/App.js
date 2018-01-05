@@ -73,6 +73,10 @@ class App extends Component {
   }
 
   render() {
+    var style = {
+      width,
+      margin: "auto"
+    };
     var selectedWeek = d3.timeFormat("%B %d, %Y")(this.state.selectedWeek);
     var links = [];
     _.each(this.state.categories, category => {
@@ -95,7 +99,7 @@ class App extends Component {
     };
 
     return (
-      <div className="App">
+      <div className="App" style={style}>
         <h2>
           <span className="weekChange" onClick={this.prevWeek}>
             &larr;

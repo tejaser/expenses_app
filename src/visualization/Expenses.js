@@ -245,10 +245,10 @@ class Expenses extends Component {
     _.each(this.props.categories, category => {
       var { x, y, radius } = category;
       if (
-        x - radius / 2 < expenseX &&
-        expenseX < x + radius / 2 &&
-        y - radius / 2 < expenseY &&
-        expenseY < y + radius / 2
+        x - radius < expenseX &&
+        expenseX < x + radius &&
+        y - radius < expenseY &&
+        expenseY < y + radius
       ) {
         this.props.linkToCategory(expense, category);
         this.dragged = { expense, category };
