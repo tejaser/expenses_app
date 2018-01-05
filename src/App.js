@@ -57,7 +57,13 @@ class App extends Component {
   }
 
   linkToCategory(expense, category) {
-    category.expenses.push(expense);
+    // this will toggle the link incase done categorization
+    if (_.includes(category.expenses, expense)) {
+      category.expenses = _.without(category.expenses, expense);
+    } else {
+      category.expenses.push(expense);
+    }
+
     category.total = _.sumBy(category.expenses, "amount");
 
     // this.setState({ links });
