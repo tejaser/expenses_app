@@ -24,6 +24,7 @@ class App extends Component {
     this.prevWeek = this.prevWeek.bind(this);
     this.nextWeek = this.nextWeek.bind(this);
     this.linkToCategory = this.linkToCategory.bind(this);
+    this.editDate = this.editDate.bind(this);
   }
   componentWillMount() {
     var expenses = _.chain(expenseData)
@@ -72,6 +73,11 @@ class App extends Component {
     // console.log(category);
   }
 
+  editDate(expense, day) {
+    expense.date = day.date;
+    this.forceUpdate();
+  }
+
   render() {
     var style = {
       width,
@@ -95,7 +101,8 @@ class App extends Component {
     var props = {
       width,
       links,
-      linkToCategory: this.linkToCategory
+      linkToCategory: this.linkToCategory,
+      editDate: this.editDate
     };
 
     return (

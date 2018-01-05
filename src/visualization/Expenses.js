@@ -92,6 +92,7 @@ class Expenses extends Component {
       weeksExtent[0],
       d3.timeWeek.offset(weeksExtent[1], 1)
     );
+
     this.weeks = _.map(weeks, week => {
       return {
         week,
@@ -99,6 +100,7 @@ class Expenses extends Component {
         y: yScale(week) + height
       };
     });
+
     // console.log(this.weeks);
     // circles for the back of each day in semi-circle
     this.days = _.map(daysOfWeek, date => {
@@ -108,6 +110,8 @@ class Expenses extends Component {
       var y = selectedWeekRadius * Math.sin(angle) + margin.top;
       return {
         name,
+        date: d3.timeDay.offset(this.props.selectedWeek, dayOfWeek),
+        radius: 50,
         x,
         y
       };
@@ -152,16 +156,16 @@ class Expenses extends Component {
       .classed("day", true)
       .attr("transform", d => "translate(" + [d.x, d.y] + ")");
 
-    var daysRadius = 50;
+    // var daysRadius = 50;
     var fontSize = 12;
     days
       .append("circle")
-      .attr("r", daysRadius)
+      .attr("r", d => d.radius)
       .attr("fill", "#ccc")
       .attr("opacity", 0.25);
     days
       .append("text")
-      .attr("y", daysRadius + fontSize)
+      .attr("y", d => d.radius + fontSize)
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
       .attr("fill", "#999")
@@ -241,7 +245,7 @@ class Expenses extends Component {
     var expense = d3.event.subject;
     var expenseX = d3.event.x;
     var expenseY = d3.event.y;
-
+    // go through all the categories to see if overlapping
     _.each(this.props.categories, category => {
       var { x, y, radius } = category;
       if (
@@ -251,7 +255,19 @@ class Expenses extends Component {
         expenseY < y + radius
       ) {
         this.props.linkToCategory(expense, category);
-        this.dragged = { expense, category };
+        this.dragged = { expense, category, type: "category" };
+      }
+    });
+    // go through all the days to see if expenses overlaps
+    _.each(this.days, day => {
+      var { x, y, radius } = day;
+      if (
+        x - radius < expenseX &&
+        expenseX < x + radius &&
+        y - radius < expenseY &&
+        expenseY < y + radius
+      ) {
+        this.dragged = { expense, day, type: "day" };
       }
     });
   }
@@ -262,9 +278,12 @@ class Expenses extends Component {
     d3.event.subject.fy = null;
 
     //clean up the dragged variable
-    if (this.dragged) {
+    if (this.dragged && this.dragged.type === "category") {
       var { expense, category } = this.dragged;
       this.props.linkToCategory(expense, category);
+    } else if (this.dragged && this.dragged.type === "day") {
+      var { expense, day } = this.dragged;
+      this.props.editDate(expense, day);
     }
 
     this.dragged = null;
